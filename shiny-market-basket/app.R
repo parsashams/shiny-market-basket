@@ -21,7 +21,7 @@ ui <- dashboardPage(skin="yellow",
     tabItems(
       tabItem(tabName = "overview",
         fluidPage(
-          
+          fluidRow(box(verbatimTextOutput("txt_rules"), width=12))
         )
       ),
       tabItem(tabName = "explore",
@@ -59,16 +59,25 @@ server <- function(input, output, session) {
     ret
   })
   
+  rules <- reactive({
+    data_file <- ret_data_file()
+    data_file <- Groceries
+    ret <- apriori(data_file, parameter = list(support = 0.006, confidence = 0.25, minlen = 2))
+    summary(ret)
+  })
+  
+  output$txt_rules <- renderPrint(rules())
+  
   output$txt_overview <- renderPrint({
     validate(need(input$file1$datapath, "no data yet..."))
     summary(data_file)
   })
   
   output$plt_item_freq <- renderPlot({
-    a <- df_items()
+    dat <- df_items()
     b <- input$item
-    ggplot(a %>% filter(item==input$item), aes(x=1,y=freq)) +
-      geom_bar(stat="identity", fill="blue3") + ylim(0,max(a$freq)) + 
+    ggplot(dat %>% filter(item==input$item), aes(x=1,y=freq)) +
+      geom_bar(stat="identity", fill="blue3") + ylim(0,max(dat$freq)) + 
       theme_minimal() +
       labs(x=input$item,y="Frequency") +
       scale_x_continuous(breaks=NULL)
